@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>List Creation</title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.js"></script>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+
+<body>
+<!-- 
+This is view for displaying all the available entries. List of these entries is retrieved from database
+table coursecode. User can select any number of entries for adding in to be created mail list. 
+This view also have one text field for taking name of to be created list form user.  
+ -->
+  <div class="col-lg-12">
+
+<!-- div is binded with controller atpController and model listcreate -->  
+  <div ng-app="listcreate" ng-controller="atpController">
+  
+<!-- Link for moving MailList page(for sending mail) and Option page(for adding new entry) -->  
+   <h2>microCRM </h2> <h4><a href="http://localhost:8080/causecode/maillist.html">Send Mail |</a>
+    <a href="http://localhost:8080/causecode/option.html">Add User</a></h4>
+
+   <br><h3>Create List</h3>
+   <form ng-submit="sendPost()">   
+   <input type="text" class="form-control" ng-model="filename" placeholder="Name of List"/>
+   <br>
+   
+   <!-- style formated for page with bootstrap 
+   "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" -->
+     <table class="table table-hover">         
+         <tr><th>Name</th><th>Email</th><th>Select</th></tr>
+
+     <!-- register_member is binded variable with controller, This variable get name and email of users
+     as response from ListCreation.java Servlet
+     
+     selected[data.id]-> this is an object declared in controller this stores data of all checkboxes 
+     manipulated by user.
+     format of data -> 
+     {"1":"true","2":false}
+     in above example user selected entry at index 1 and 2 but then deselected entry at index 2 while did not make
+     change in any other entries if exsisted      
+       -->
+         <tr ng-repeat="data in register_members">
+             <td>{{data.name}}</td><td>{{data.email}}</td>        
+             <td><input type="checkbox" ng-model="selected[data.id]"></td>
+         </tr>
+       
+      </table>
+      <br>
+      <button  class="btn btn-primary btn-block" type="submit">Create List</button>
+
+      <!-- variable error -> used for showing state of request made by user for adding new entry
+      error can either have 2 possible values ("Waiting for response" or "Invalid Input") or no value
+       -->
+      <p>{{error}}</p> 
+    </form>
+  </div>     
+</div>
+        <script>
+          var app = angular.module('listcreate', []);
+           app.controller('atpController', function ($scope, $http) {
+            
+        	/*GET request is sent to ListCreation Servlet for retrieving name and email of all registered users
+             whoes information is present in Database*/
+        	   $http.get('ListCreation').then(function (response) {
+              
+            /*variable register_members -> contain response from ListCreation Servlet. This response is in JSON Format
+             object selected -> is going to conatin email addresses which are selected by user for adding in list
+        	 variable filename -> is going to contain name of to be created List 
+            */
+                $scope.register_members = response.data;
+                $scope.selected = {};
+                $scope.filename="";
+             
+              /* this function will be triggered in response of submit button of Form
+              Here, variable selected -> contain list of all selected email Id 
+                    variable filename -> contain name of to be created list
+                    variable error -> used for showing state of request made by user for adding new entry
+                    error can either have 2 possible values ("Waiting for response" or "Invalid Input") 
+                    or no value
+                    if response is 1 from ListCreation.servlet then entries made on this page are invalid
+                    */
+               $scope.sendPost = function() {
+                        $scope.error ="Waiting for Response"
+                   $http({
+                       url : 'ListCreation',
+                       method : "POST",
+                       data : {
+                           name : $scope.selected,
+                       filename : $scope.filename
+                       }
+                   }).then(function(response) {
+                	   //Positive Response case
+                	  if(response.data==1)
+                		  {
+                        $scope.error = "Invalid Inputs,Possible Reason : List Name is Empty , No mail ID is selected , List Name already exsist ";		    
+                		  }
+                	  else{
+                		$scope.error ="List Created" ;
+                		}
+                   }, function(response) {
+                       //fail case
+                       $scope.message = response;
+                       location.href="http://localhost:8080/causecode/Error.html"
+                           
+                                          }
+                            );
+            };
+         });
+      });
+           
+ </script>
+</body>
+</html>

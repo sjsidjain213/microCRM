@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="ISO-8859-1">
+<title>Add User</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+
+<!-- This is View for adding Users in database. These users will in turn be available for
+adding in list-->
+<div class="col-lg-12">
+
+<!-- This div is binded with Controller-> customersCtrl and module-> myApp -->
+  <div ng-app="myApp" ng-controller="customersCtrl"> 
+  
+    <h2>microCRM
+    </h2>
+    <h4>
+         <a href="http://localhost:8080/causecode/newlist.html">Create List |</a>
+         <a href="http://localhost:8080/causecode/maillist.html">| Sent Mail</a>
+    </h4>
+           <br>
+   <h3>Add User
+   </h3> 
+      <form ng-submit="sendPost()">
+              <table class="table table-hover">
+                    <tr>
+                         <td>Name : </td>
+                         <td><textarea class="form-control" rows="1" ng-model="name" placeholder="Name"></textarea></td>  
+                    </tr>
+                    <tr>
+                         <td>Email ID : </td>
+                         <td><textarea class="form-control" rows="1" ng-model="email" placeholder="Email ID"></textarea></td>  
+                    </tr>
+              </table>
+                     <br>
+                        <button class="btn btn-primary btn-block" type="submit">Add</button>
+       </form>
+       <p>{{error}}</p>
+   </div>
+</div>
+<script>
+var app = angular.module('myApp', []);
+/* variable error -> used for showing state of request made by user for adding new entry
+error can either have 2 possible values ("Waiting for response" or "Invalid Input") or no value
+variable name -> binded with textfield for getting name of user
+variable email -> binded with textfield for getting emailid of user
+if response is 1 from ListCreation.servlet then entries made on this page are invalid
+
+*/
+app.controller('customersCtrl', function($scope, $http) {
+	            
+	$scope.sendPost = function() {
+		  $scope.error ="Waiting for Response";
+		    
+		$http({
+                   url : 'AddUser',
+                   method : "POST",
+                   data : {
+                       name : $scope.name,
+                       email : $scope.email
+                   }
+               }).then(function(response) {
+                   console.log(response.data);
+                   $scope.messages = response.data;
+               if(response.data==1)
+            	   {
+            	   $scope.error ="Invalid Input";
+            	   }
+               else{
+            	   $scope.error="User added";
+                   $scope.name="";
+                   $scope.email="";
+  
+               }
+               }, function(response) {
+                   //fail case
+                   console.log(response);
+                   $scope.message = response;
+                   location.href="http://localhost:8080/causecode/Error.html"
+               });
+               };
+               });
+</script>
+</body>
+</html>
